@@ -5,10 +5,10 @@
 void Menu::run() {
     int choice = 0;
     while (choice != 4) {
-        std::cout << "Bienvenido al buscaminas\n";
-        std::cout << "1.- Nivel facil\n";
-        std::cout << "2.- Nivel Intermedio\n";
-        std::cout << "3.- Nivel experto\n";
+        std::cout << "¿Listo para el juego?\n";
+        std::cout << "1.- Nivel easy\n";
+        std::cout << "2.- Nivel masomenos\n";
+        std::cout << "3.- Nivel vergas\n";
         std::cout << "4.- Salir\n";
         std::cin >> choice;
         switch (choice) {
@@ -25,10 +25,10 @@ void Menu::run() {
             break;
         }
         case 4:
-            std::cout << "Hasta pronto :)\n";
+            std::cout << "Bye!\n";
             break;
         default:
-            std::cout << "Opcion no valida\n";
+            std::cout << "Opcion invalida, nomas del 1-4 \n";
             break;
         }
     }

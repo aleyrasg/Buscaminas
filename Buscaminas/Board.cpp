@@ -63,7 +63,7 @@ void Board::drawTiles() {
                     if (!TileBoard[TileUnderMouse].isFlagged) {
                         TileBoard[TileUnderMouse].open();
                         if (TileBoard[TileUnderMouse].hasBomb) {
-                            std::cout << "Perdiste :(" << std::endl;
+                            std::cout << "Perdiste Loser" << std::endl;
                             window.close();
                             return;
                         }
@@ -72,7 +72,7 @@ void Board::drawTiles() {
                         openedTiles = std::count_if(TileBoard.begin(), TileBoard.end(), [](const Tile& t) { return !t.isClosed && !t.hasBomb; });
 
                         if (openedTiles == (TotalTiles - bombs)) {
-                            std::cout << "Felicidades! Ganaste!!" << std::endl;
+                            std::cout << "¡Felicidades! " << std::endl;
                             window.close();
                         }
                     }
