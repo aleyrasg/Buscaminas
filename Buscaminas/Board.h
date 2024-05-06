@@ -1,32 +1,20 @@
 #pragma once
-#ifndef BOARD
-#define BOARD
+#ifndef BOARD_H
+#define BOARD_H
 
-#include <SFML/Graphics.hpp>
 #include <vector>
 #include "Tile.h"
-#include <random>
-#include <iostream>
 
-class Board
-{
-private:
-	int OpenedTiles, TotalTiles, VideoRes = 0;
-	std::vector<Tile> Tiles;
-	void generatedBoard();
-	void checkSurroundings(int);
-	void handleClicks(const sf::Event& event);
-	void flush(int);
-
-
+class Board {
 public:
-	Board(int, int);
-	std::vector<int> generateBombLocations();
-	int SideLength, Bombs = 0;
-	void drawTiles();
+    int TilesPerSide, bombs, TotalTiles, videores, openedTiles = 0;
+    std::vector<Tile> TileBoard;
+
+    Board(int aux, int bombs);
+    void flush(int TileNumber);
+    void drawTiles();
+    void checkAround(int TileNumber);
+    void assignBombs(int TotalTiles, int bombs, std::vector<int>& AssignedBombs);
 };
 
-#endif // !BOARD
-
-
-
+#endif /* BOARD_H */

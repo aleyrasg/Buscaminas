@@ -1,9 +1,12 @@
 #pragma once
 
-class Menu
-{
+#ifndef MENU_H
+#define MENU_H
+
+class Menu {
 public:
-	static void run();
-	static void playGayme(int, int);
+    static void run();
 };
+
+#endif /* MENU_H */
 

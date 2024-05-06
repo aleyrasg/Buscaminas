@@ -1,109 +1,131 @@
 #include "Board.h"
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include <random>
+#include <algorithm>
 
-Board::Board(int sideLength, int bombs) : SideLength(sideLength), Bombs(bombs) {
-    TotalTiles = SideLength * SideLength;
-    VideoRes = SideLength * 50;
-    Tiles.resize(TotalTiles);
-    generatedBoard();
+Board::Board(int aux, int bombs) : TilesPerSide(aux), bombs(bombs) {
+    videores = TilesPerSide * 50;
+    TotalTiles = TilesPerSide * TilesPerSide;
+    TileBoard.resize(TotalTiles);
+
+    std::vector<int> AssignedBombs;
+    assignBombs(TotalTiles, bombs, AssignedBombs);
+
+    for (int i = 0; i < TilesPerSide; i++) {
+        for (int j = 0; j < TilesPerSide; j++) {
+            int counter = i * TilesPerSide + j;
+            TileBoard[counter].column = j;
+            TileBoard[counter].row = i;
+            if (std::find(AssignedBombs.begin(), AssignedBombs.end(), counter) != AssignedBombs.end()) {
+                TileBoard[counter].hasBomb = true;
+            }
+            TileBoard[counter].TileDesign();
+        }
+    }
+
+    for (int i = 0; i < TotalTiles; i++) {
+        checkAround(i);
+    }
     drawTiles();
 }
 
-void Board::generatedBoard()
-{
-    std::vector<int> bombLocations = generateBombLocations();
-
-    for (int i = 0; i < TotalTiles; ++i) {
-        Tiles[i].hasBomb = std::binary_search(bombLocations.begin(), bombLocations.end(), i);
-        checkSurroundings(i);
-    }
-}
-
-std::vector<int> Board::generateBombLocations()
-{
-    std::vector<int> bombLocations(Bombs);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, TotalTiles - 1);
-
-    for (int i = 0; i < Bombs; ++i) {
-        int random_number;
-        do {
-            random_number = dis(gen);
-        } while (std::find(bombLocations.begin(), bombLocations.end(), random_number) != bombLocations.end());
-        bombLocations[i] = random_number;
-    }
-    std::sort(bombLocations.begin(), bombLocations.end());
-    return bombLocations;
-}
-
-void Board::checkSurroundings(int tileNumber) {
-    int row = tileNumber / SideLength;
-    int column = tileNumber % SideLength;
-
-    for (int i = std::max(column - 1, 0); i < std::min(column + 2, SideLength); ++i) {
-        for (int j = std::max(row - 1, 0); j < std::min(row + 2, SideLength); ++j) {
-            if (i == column && j == row)
-                continue;
-
-            int neighborIndex = j * SideLength + i;
-            if (Tiles[neighborIndex].hasBomb)
-                Tiles[tileNumber].BombsAround++;
-        }
-    }
-}
-
-void Board::drawTiles()
-{
-    sf::RenderWindow window(sf::VideoMode(VideoRes, VideoRes), "Buscaminas");
-
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-            else if (event.type == sf::Event::MouseButtonPressed)
-                handleClicks(event);
-        }
-
-        window.clear();
-        for (const auto& tile : Tiles)
-            window.draw(tile.Square);
-        window.display();
-    }
-}
-
-void Board::handleClicks(const sf::Event& event) {
-    sf::Vector2i localPosition = sf::Mouse::getPosition();
-    int mouseX = localPosition.x / 50;
-    int mouseY = localPosition.y / 50;
-    int tileUnderMouse = mouseY * SideLength + mouseX;
-
-    if (event.mouseButton.button == sf::Mouse::Right && Tiles[tileUnderMouse].isClosed) {
-        Tiles[tileUnderMouse].isFlagged = !Tiles[tileUnderMouse].isFlagged;
-        Tiles[tileUnderMouse].flag();
-    }
-    else if (event.mouseButton.button == sf::Mouse::Left && !Tiles[tileUnderMouse].isFlagged) {
-        Tiles[tileUnderMouse].click();
-        OpenedTiles++;
-        if (Tiles[tileUnderMouse].BombsAround == 0 && !Tiles[tileUnderMouse].hasBomb)
-            flush(tileUnderMouse);
-        if (OpenedTiles == (TotalTiles - Bombs))
-            std::cout << "¡Felicidades!" << std::endl;
-    }
-}
-void Board::flush(int tileNumber) {
-    int row = tileNumber / SideLength;
-    int column = tileNumber % SideLength;
-
-    for (int i = std::max(column - 1, 0); i < std::min(column + 2, SideLength); ++i) {
-        for (int j = std::max(row - 1, 0); j < std::min(row + 2, SideLength); ++j) {
-            int neighborIndex = j * SideLength + i;
-            if (Tiles[neighborIndex].isClosed) {
-                Tiles[neighborIndex].click();
-                OpenedTiles++;
-                if (Tiles[neighborIndex].BombsAround == 0 && !Tiles[neighborIndex].hasBomb)
+void Board::flush(int TileNumber) {
+    for (int i = std::max(TileBoard[TileNumber].column - 1, 0); i < std::min(TileBoard[TileNumber].column + 2, TilesPerSide); i++) {
+        for (int j = std::max(TileBoard[TileNumber].row - 1, 0); j < std::min(TileBoard[TileNumber].row + 2, TilesPerSide); j++) {
+            int neighborIndex = j * TilesPerSide + i;
+            if (TileBoard[neighborIndex].isClosed) {
+                TileBoard[neighborIndex].open();
+                if (TileBoard[neighborIndex].BombsAround == 0 && !TileBoard[neighborIndex].hasBomb)
                     flush(neighborIndex);
             }
         }
     }
+}
+
+void Board::drawTiles() {
+    sf::RenderWindow window(sf::VideoMode(videores, videores), "Buscaminas :)");
+    int TileUnderMouse = 0;
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+            int mouseX = localPosition.x / 50;
+            int mouseY = localPosition.y / 50;
+
+            if (event.type == sf::Event::MouseButtonPressed) {
+                if (event.mouseButton.button == sf::Mouse::Right && TileBoard[TileUnderMouse].isClosed) {
+                    TileBoard[TileUnderMouse].isFlagged = !TileBoard[TileUnderMouse].isFlagged;
+                    TileBoard[TileUnderMouse].flag();
+                }
+                else if (event.mouseButton.button == sf::Mouse::Left) {
+                    if (!TileBoard[TileUnderMouse].isFlagged) {
+                        TileBoard[TileUnderMouse].open();
+                        if (TileBoard[TileUnderMouse].hasBomb) {
+                            std::cout << "Perdiste :(" << std::endl;
+                            window.close();
+                            return;
+                        }
+                        if (TileBoard[TileUnderMouse].BombsAround == 0 && !TileBoard[TileUnderMouse].hasBomb)
+                            flush(TileUnderMouse);
+                        openedTiles = std::count_if(TileBoard.begin(), TileBoard.end(), [](const Tile& t) { return !t.isClosed && !t.hasBomb; });
+
+                        if (openedTiles == (TotalTiles - bombs)) {
+                            std::cout << "Felicidades! Ganaste!!" << std::endl;
+                            window.close();
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < TotalTiles; i++) {
+                if (mouseY == TileBoard[i].row && mouseX == TileBoard[i].column) {
+                    TileBoard[i].highlight();
+                    TileUnderMouse = i;
+                }
+                else {
+                    TileBoard[i].unhighlight();
+                }
+            }
+
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+
+        window.clear();
+        for (int i = 0; i < TotalTiles; i++) {
+            window.draw(TileBoard[i].Square);
+        }
+        window.display();
+    }
+}
+
+void Board::checkAround(int TileNumber) {
+    for (int i = std::max(TileBoard[TileNumber].column - 1, 0); i < std::min(TileBoard[TileNumber].column + 2, TilesPerSide); i++) {
+        for (int j = std::max(TileBoard[TileNumber].row - 1, 0); j < std::min(TileBoard[TileNumber].row + 2, TilesPerSide); j++) {
+            int neighborIndex = j * TilesPerSide + i;
+            if (i != TileBoard[TileNumber].column || j != TileBoard[TileNumber].row) {
+                if (TileBoard[neighborIndex].hasBomb) {
+                    TileBoard[TileNumber].BombsAround++;
+                }
+            }
+        }
+    }
+}
+
+void Board::assignBombs(int TotalTiles, int bombs, std::vector<int>& AssignedBombs) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, TotalTiles - 1);
+
+    for (int i = 0; i < bombs; i++) {
+        int random_number;
+        do {
+            random_number = dis(gen);
+        } while (std::find(AssignedBombs.begin(), AssignedBombs.end(), random_number) != AssignedBombs.end());
+        AssignedBombs.push_back(random_number);
+    }
+    std::sort(AssignedBombs.begin(), AssignedBombs.end());
 }
