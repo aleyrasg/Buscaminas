@@ -5,7 +5,7 @@ void Tile::TileDesign() {
     posy = row * 50;
     posx = column * 50;
     Square.setPosition(posx, posy);
-    Square.setFillColor(sf::Color::Blue);
+    Square.setFillColor(sf::Color::Magenta);
     Square.setOutlineThickness(2);
     Square.setOutlineColor(sf::Color::Black);
 }
@@ -17,7 +17,7 @@ void Tile::highlight() {
 
 void Tile::unhighlight() {
     if (isClosed && !isFlagged)
-        Square.setFillColor(sf::Color::Blue);
+        Square.setFillColor(sf::Color::Magenta);
 }
 
 void Tile::flag() {
@@ -27,7 +27,8 @@ void Tile::flag() {
 
 void Tile::open() {
     if (hasBomb) {
-        Square.setFillColor(sf::Color::Red);
+        Square.setFillColor(sf::Color::Blue);
+            
     }
     else {
         Square.setFillColor(sf::Color::White);
