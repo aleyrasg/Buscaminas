@@ -7,8 +7,8 @@ void Menu::run() {
     while (choice != 4) {
         std::cout << "¿Listo para el juego?\n";
         std::cout << "1.- Nivel easy\n";
-        std::cout << "2.- Nivel masomenos\n";
-        std::cout << "3.- Nivel vergas\n";
+        std::cout << "2.- Nivel medium\n";
+        std::cout << "3.- Nivel hard\n";
         std::cout << "4.- Salir\n";
         std::cin >> choice;
         switch (choice) {
